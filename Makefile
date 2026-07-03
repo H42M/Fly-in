@@ -13,7 +13,8 @@ debug:
 	$(PYTHON) -m pdb $(MAIN)
 
 clean:
-	rm -rf __pycache__ .mypy__cache
+	@find . -type d -name "__pycache__" -exec rm -rf {} +
+	@rm -rf .mypy__cache .pytest_cache
 
 lint:
 	@flake8 .
