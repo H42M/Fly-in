@@ -1,11 +1,11 @@
 from srcs.parsing.config import Config
 
 
-def parse_input(file: str) -> Config:
-    if not file:
+def parse_input(path: str) -> Config:
+    if not path:
         return Config()
-    with open(file, "r") as f:
-        raw = f.read()
+    with open(path, "r") as file:
+        raw = file.read()
     list_raw = raw.split("\n")
     list_raw_cpy = list_raw.copy()
 
