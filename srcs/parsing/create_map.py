@@ -1,6 +1,5 @@
 from srcs.parsing.entities import Map, Hub, Connection, ZoneType
 from srcs.parsing.input_parser import parse_input
-from srcs.parsing.config import Config
 
 
 def create_hub(hub_data: str) -> Hub:
@@ -42,12 +41,56 @@ def create_hub(hub_data: str) -> Hub:
     return Hub(**kwargs)
 
 
+def create_connection(connection_data: str) -> Connection:
+    if not connection_data:
+        raise ValueError("Missing connection data")
+    if "[" not in connection_data:
+        route = connection_data.split("-", 1)
+        return Connection(route[0], route[1])
+
+    data = connection_data.split("[", 1)
+    standard_data = data[0]
+    metadata = data[1].removesuffix("]")
+
+    route = standard_data.split("-", 1)
+    name1 = route[0]
+    name2 = route[1]
+    if not metadata.startswith("max_link_capacity"):
+        raise ValueError(
+            f"Incorrect metadata for connection: {connection_data}")
+    max_link_capacity = int(metadata.removeprefix("max_link_capacity="))
+
+    return Connection(
+        name1=name1,
+        name2=name2,
+        max_link_capacity=max_link_capacity
+    )
+
+
 def create_entities(path: str) -> Map:
     config = parse_input(path)
-    hubs = config.hub_list
-    connections = config.connection_list
-    print(create_hub(config.start_hub))
+    hubs_raw = config.hub_list
+    hubs = []
+    connections_raw = config.connection_list
+    connections = []
+
+    start_hub = create_hub(config.start_hub)
+    for hub in hubs_raw:
+        hubs.append(create_hub(hub))
+    end_hub = create_hub(config.end_hub)
+    for connection in connections_raw:
+        connections.append(create_connection(connection))
+
+    return Map(
+        nb_drones=config.nb_drones,
+        start_hub=start_hub,
+        hubs=hubs,
+        end_hub=end_hub,
+        connections=connections
+    )
 
 
 if __name__ == "__main__":
-    create_entities("maps/easy/03_basic_capacity.txt")
+    test = create_entities("maps/easy/01_linear_path.txt")
+    for i in test.__slots__:
+        print(i, test.__getattribute__(i))

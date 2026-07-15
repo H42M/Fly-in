@@ -25,7 +25,7 @@ class Connection:
     max_link_capacity: int = 1
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Map:
     nb_drones: int
     start_hub: Hub
