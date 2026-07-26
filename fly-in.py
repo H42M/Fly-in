@@ -1,10 +1,9 @@
-from srcs.parsing.input_parser import parse_input
+from srcs.parsing.create_map import create_entities
 
 
 def run() -> None:
-    test = parse_input("maps/easy/01_linear_path.txt")
-    for attribute in test.__slots__:
-        print(attribute, test.__getattribute__(attribute))
+    map = create_entities("maps/hard/03_ultimate_challenge.txt")
+    print(map)
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ class Hub:
     coordinates: tuple[int, int]
     color: str | None = None
     zone: ZoneType = field(default=ZoneType.NORMAL)
-    max_drones: int = field(default=1)
+    max_drones: int | None = field(default=1)
 
 
 @dataclass(frozen=True)

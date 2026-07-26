@@ -2,12 +2,17 @@ from srcs.parsing.entities import Map, Hub, Connection, ZoneType
 from srcs.parsing.input_parser import parse_input
 
 
-def create_hub(hub_data: str) -> Hub:
+def create_hub(hub_data: str, special_case: bool) -> Hub:
     if not hub_data:
         raise ValueError("Missing hub data.")
-    data = hub_data.split("[", 1)
-    standard_data = data[0]
-    metadata = data[1].removesuffix("]")
+    if "[" not in hub_data:
+        metadata = ""
+        standard_data = hub_data
+
+    else:
+        data = hub_data.split("[", 1)
+        standard_data = data[0]
+        metadata = data[1].removesuffix("]")
 
     data_items = standard_data.split()
     name = data_items[0]
@@ -22,7 +27,7 @@ def create_hub(hub_data: str) -> Hub:
         if item.startswith("zone"):
             zonetype = item.removeprefix("zone=")
             if zonetype in ZoneType:
-                zone = ZoneType[zonetype]
+                zone = ZoneType(zonetype)
         if item.startswith("max_drones"):
             max_drones = int(item.removeprefix("max_drones="))
 
@@ -38,6 +43,8 @@ def create_hub(hub_data: str) -> Hub:
 
     if max_drones is not None:
         kwargs["max_drones"] = max_drones
+    if name == "start_hub" or name == "end_hub":
+        max_drones = None
     return Hub(**kwargs)
 
 
@@ -49,7 +56,7 @@ def create_connection(connection_data: str) -> Connection:
         return Connection(route[0], route[1])
 
     data = connection_data.split("[", 1)
-    standard_data = data[0]
+    standard_data = data[0].strip()
     metadata = data[1].removesuffix("]")
 
     route = standard_data.split("-", 1)
@@ -74,10 +81,10 @@ def create_entities(path: str) -> Map:
     connections_raw = config.connection_list
     connections = []
 
-    start_hub = create_hub(config.start_hub)
+    start_hub = create_hub(config.start_hub, True)
     for hub in hubs_raw:
-        hubs.append(create_hub(hub))
-    end_hub = create_hub(config.end_hub)
+        hubs.append(create_hub(hub, False))
+    end_hub = create_hub(config.end_hub, True)
     for connection in connections_raw:
         connections.append(create_connection(connection))
 
@@ -91,6 +98,6 @@ def create_entities(path: str) -> Map:
 
 
 if __name__ == "__main__":
-    test = create_entities("maps/easy/01_linear_path.txt")
+    test = create_entities("maps/easy/02_simple_fork.txt")
     for i in test.__slots__:
         print(i, test.__getattribute__(i))
