@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Any
 from srcs.parsing.entities import Map, Hub, Connection, ZoneType
 from srcs.parsing.input_parser import parse_input
@@ -88,6 +89,14 @@ def create_entities(path: str) -> Map:
     end_hub = create_hub(config.end_hub, True)
     for connection in connections_raw:
         connections.append(create_connection(connection))
+
+    neighbours: dict[str, list[Connection]] = {}
+    for h in hubs:
+        eligible_connections: list[Connection] = []
+        for con in connections:
+            if h.name == con.name1 or h.name == con.name2:
+                eligible_connections.append(con)
+        neighbours[h.name] = eligible_connections
 
     return Map(
         nb_drones=config.nb_drones,
