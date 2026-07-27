@@ -1,3 +1,4 @@
+from typing import Any
 from srcs.parsing.entities import Map, Hub, Connection, ZoneType
 from srcs.parsing.input_parser import parse_input
 
@@ -34,7 +35,7 @@ def create_hub(hub_data: str, special_case: bool) -> Hub:
     if not name or not coordinates:
         raise ValueError("Missing hub data.")
 
-    kwargs = {"name": name, "coordinates": coordinates}
+    kwargs: dict[str, Any] = {"name": name, "coordinates": coordinates}
     if color is not None:
         kwargs["color"] = color
 
@@ -43,8 +44,8 @@ def create_hub(hub_data: str, special_case: bool) -> Hub:
 
     if max_drones is not None:
         kwargs["max_drones"] = max_drones
-    if name == "start_hub" or name == "end_hub":
-        max_drones = None
+    if special_case:
+        kwargs["max_drones"] = None
     return Hub(**kwargs)
 
 

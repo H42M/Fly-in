@@ -24,11 +24,8 @@ def parse_input(path: str) -> Config:
             if not line[-1] in '0123456789':
                 nb_drones = base_config.nb_drones
             else:
-                nb_drones = ""
-                for char in line[::-1]:
-                    if char in "0123456789":
-                        nb_drones += char
-                nb_drones = int(nb_drones[::-1])
+                raw_nb_drones = line.removeprefix("nb_drones:").strip()
+                nb_drones = int(raw_nb_drones)
 
         elif line.startswith("start_hub"):
             start_hub = line.removeprefix("start_hub: ")
