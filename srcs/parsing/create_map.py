@@ -91,19 +91,30 @@ def create_entities(path: str) -> Map:
         connections.append(create_connection(connection))
 
     neighbours: dict[str, list[Connection]] = {}
+    eligible_connections: list[Connection] = []
+    for con in connections:
+        if start_hub.name in (con.name1, con.name2):
+            eligible_connections.append(con)
+    neighbours[start_hub.name] = eligible_connections
     for h in hubs:
-        eligible_connections: list[Connection] = []
+        eligible_connections = []
         for con in connections:
             if h.name == con.name1 or h.name == con.name2:
                 eligible_connections.append(con)
         neighbours[h.name] = eligible_connections
+    eligible_connections = []
+    for con in connections:
+        if end_hub.name in (con.name1, con.name2):
+            eligible_connections.append(con)
+        neighbours[end_hub.name] = eligible_connections
 
     return Map(
         nb_drones=config.nb_drones,
         start_hub=start_hub,
         hubs=hubs,
         end_hub=end_hub,
-        connections=connections
+        connections=connections,
+        neighbours=neighbours
     )
 
 

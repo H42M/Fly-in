@@ -32,3 +32,4 @@ class Map:
     hubs: list[Hub]
     end_hub: Hub
     connections: list[Connection]
+    neighbours: dict[str, list[Connection]]
