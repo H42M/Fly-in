@@ -33,3 +33,4 @@ class Map:
     end_hub: Hub
     connections: list[Connection]
     neighbours: dict[str, list[Connection]]
+    hub_name_lookup: dict[str, Hub]

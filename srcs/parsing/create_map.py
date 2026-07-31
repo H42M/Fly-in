@@ -79,7 +79,7 @@ def create_connection(connection_data: str) -> Connection:
 def create_entities(path: str) -> Map:
     config = parse_input(path)
     hubs_raw = config.hub_list
-    hubs = []
+    hubs: list[Hub] = []
     connections_raw = config.connection_list
     connections = []
 
@@ -108,13 +108,20 @@ def create_entities(path: str) -> Map:
             eligible_connections.append(con)
         neighbours[end_hub.name] = eligible_connections
 
+    hub_name_lookup: dict[str, Hub] = {}
+    hub_name_lookup[start_hub.name] = start_hub
+    for h in hubs:
+        hub_name_lookup[h.name] = h
+    hub_name_lookup[end_hub.name] = end_hub
+
     return Map(
         nb_drones=config.nb_drones,
         start_hub=start_hub,
         hubs=hubs,
         end_hub=end_hub,
         connections=connections,
-        neighbours=neighbours
+        neighbours=neighbours,
+        hub_name_lookup=hub_name_lookup
     )
 
 
