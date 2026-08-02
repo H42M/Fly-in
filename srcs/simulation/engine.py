@@ -73,3 +73,10 @@ class Engine:
                     self.move_drone(drone, distances)
 
             state.turn += 1
+            print(self.display_turn())
+
+    def display_turn(self) -> str:
+        drones = "".join([f"{drone.id} -> {drone.current_position.name}\n"
+                          for drone in self.game_state.drones])
+
+        return (f"Turn {self.game_state.turn}\n{drones}")

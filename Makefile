@@ -7,7 +7,7 @@ VENV_PYTHON = $(VENV)/bin/python
 .PHONY: install run visualizer debug clean lint lint-strict
 
 $(VENV_PYTHON):
-	$(PYTHON) -m venv $(VENV)
+	@$(PYTHON) -m venv $(VENV)
 
 install: $(VENV_PYTHON)
 	$(VENV_PYTHON) -m pip install -r $(REQUIREMENTS)
