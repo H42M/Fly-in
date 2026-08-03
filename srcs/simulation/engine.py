@@ -4,7 +4,7 @@ from math import inf
 from srcs.simulation.game_state import GameState
 from srcs.simulation.drone import Drone
 from srcs.algorithms.dijkstra import algo
-from srcs.parsing.entities import ZoneType, Hub
+from srcs.parsing.entities import ZoneType, Hub, Connection
 
 
 @dataclass
@@ -53,13 +53,52 @@ class Engine:
             drone.goal_reached = True
 
     def run_simulation(self) -> None:
+        print(self.display_turn())
         drones = self.game_state.drones
         state = self.game_state
         distances = algo(state.game_map)
 
         while self.drones_traveling():
+            connection_capacities: dict[Connection, int] = {}
+            for con in self.game_state.game_map.connections:
+                connection_capacities[con] = 0
             for drone in drones:
+                if drone.goal_reached:
+                    continue
                 next_destination = self.get_next_destination(drone, distances)
+                if next_destination.max_drones:
+                    counter = 0
+                    for d in drones:
+                        if (
+                            d.current_position == next_destination
+                            and not d.in_transit
+                        ):
+                            counter += 1
+                    if counter >= next_destination.max_drones:
+                        continue
+
+                connections = state.game_map.neighbours[next_destination.name]
+                connection: Connection | None = None
+                for c in connections:
+                    if (
+                        (
+                            c.name1 == drone.current_position.name and
+                            c.name2 == next_destination.name
+                        )
+                        or (
+                            c.name2 == drone.current_position.name and
+                            c.name1 == next_destination.name
+                        )
+                    ):
+                        connection = c
+                if not connection:
+                    continue
+
+                if (
+                    connection_capacities[connection] >=
+                    connection.max_link_capacity
+                ):
+                    continue
 
                 if drone.in_transit:
                     drone.in_transit = False
@@ -71,6 +110,7 @@ class Engine:
                     continue
                 if not drone.goal_reached:
                     self.move_drone(drone, distances)
+                    connection_capacities[connection] += 1
 
             state.turn += 1
             print(self.display_turn())

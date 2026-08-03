@@ -10,23 +10,21 @@ $(VENV_PYTHON):
 	@$(PYTHON) -m venv $(VENV)
 
 install: $(VENV_PYTHON)
-	$(VENV_PYTHON) -m pip install -r $(REQUIREMENTS)
+	@$(VENV_PYTHON) -m pip install --upgrade pip
+	@$(VENV_PYTHON) -m pip install -r $(REQUIREMENTS)
 
-run: install
+run:
 	@$(VENV_PYTHON) $(MAIN)
 
-visualizer: install
-	$(VENV_PYTHON) -m srcs.visualization.dijkstra_visualizer $(MAP)
-
 debug: install
-	$(VENV_PYTHON) -m pdb $(MAIN)
+	@$(VENV_PYTHON) -m pdb $(MAIN)
 
 clean:
 	@find . -type d -name "__pycache__" -exec rm -rf {} +
 	@rm -rf .mypy_cache .pytest_cache
 
 fclean: clean
-	rm -rf $(VENV)
+	@rm -rf $(VENV)
 
 lint:
 	@$(VENV_PYTHON) flake8 .
