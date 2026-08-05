@@ -31,24 +31,52 @@ class Engine:
             hub_neighbours_names[hub_name] = neighbour_ids
         return hub_neighbours_names
 
+    def above_max_drones(self, best_candidate: Hub) -> bool:
+        drones = self.game_state.drones
+        max_drones = best_candidate.max_drones
+        if not max_drones:
+            return False
+        counter = 0
+        for drone in drones:
+            if (
+                drone.has_moved_this_turn and
+                drone.current_position == best_candidate
+            ):
+                counter += 1
+        if counter >= max_drones:
+            return True
+        return False
+
     def get_next_destination(
             self, drone: Drone, distances: dict[str, float]) -> Hub:
         game_map = self.game_state.game_map
         hnb = self.hub_neighbours_names()
+        hnl = game_map.hub_name_lookup
         neighbours = hnb[drone.current_position.name]
-        best_destination = inf
-        best_candidate = ""
+        best_possible_distance = inf
+        best_available_distance = inf
+        best_possible_route = neighbours[0]
+        best_available_route: str | None = None
         for destination in neighbours:
             candidate_dist = distances[destination]
-            if candidate_dist < best_destination:
-                best_destination = candidate_dist
-                best_candidate = destination
-        return game_map.hub_name_lookup[best_candidate]
+            if candidate_dist < best_possible_distance:
+                best_possible_route = destination
+                best_possible_distance = candidate_dist
+            if (
+                candidate_dist < best_available_distance and
+                not self.above_max_drones(hnl[destination])
+            ):
+                best_available_route = destination
+                best_available_distance = candidate_dist
+        if best_available_route is not None:
+            return game_map.hub_name_lookup[best_available_route]
+        return game_map.hub_name_lookup[best_possible_route]
 
     def move_drone(self, drone: Drone, distances: dict[str, float]) -> None:
         game_map = self.game_state.game_map
         next_destination = self.get_next_destination(drone, distances)
         drone.current_position = next_destination
+        drone.has_moved_this_turn = True
         if drone.current_position == game_map.end_hub:
             drone.goal_reached = True
 
@@ -59,6 +87,8 @@ class Engine:
         distances = algo(state.game_map)
 
         while self.drones_traveling():
+            for drone in drones:
+                drone.has_moved_this_turn = False
             connection_capacities: dict[Connection, int] = {}
             for con in self.game_state.game_map.connections:
                 connection_capacities[con] = 0

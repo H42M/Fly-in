@@ -15,5 +15,6 @@ class GameState:
                 id=f"D{drone}",
                 current_position=self.game_map.start_hub,
                 goal_reached=False,
+                has_moved_this_turn=False,
                 in_transit=False
             ))
