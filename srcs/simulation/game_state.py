@@ -16,5 +16,6 @@ class GameState:
                 current_position=self.game_map.start_hub,
                 goal_reached=False,
                 has_moved_this_turn=False,
+                traveling_to_restricted=None,
                 in_transit=False
             ))

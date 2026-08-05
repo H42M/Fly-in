@@ -64,11 +64,15 @@ class Engine:
                 best_possible_distance = candidate_dist
             if (
                 candidate_dist < best_available_distance and
-                not self.above_max_drones(hnl[destination])
+                hnl[destination].zone != ZoneType.RESTRICTED
+                and not self.above_max_drones(hnl[destination])
             ):
                 best_available_route = destination
                 best_available_distance = candidate_dist
-        if best_available_route is not None:
+        if (
+            best_available_route is not None
+            and best_available_distance <= best_possible_distance
+        ):
             return game_map.hub_name_lookup[best_available_route]
         return game_map.hub_name_lookup[best_possible_route]
 
@@ -92,9 +96,16 @@ class Engine:
             connection_capacities: dict[Connection, int] = {}
             for con in self.game_state.game_map.connections:
                 connection_capacities[con] = 0
+
             for drone in drones:
                 if drone.goal_reached:
                     continue
+                if drone.in_transit:
+                    drone.in_transit = False
+                    drone.traveling_to_restricted = None
+                    self.move_drone(drone, distances)
+                    continue
+
                 next_destination = self.get_next_destination(drone, distances)
                 if next_destination.max_drones:
                     counter = 0
@@ -104,7 +115,10 @@ class Engine:
                             and not d.in_transit
                         ):
                             counter += 1
-                    if counter >= next_destination.max_drones:
+                    if (
+                        counter >= next_destination.max_drones
+                        and next_destination.zone != ZoneType.RESTRICTED
+                    ):
                         continue
 
                 connections = state.game_map.neighbours[next_destination.name]
@@ -130,13 +144,19 @@ class Engine:
                 ):
                     continue
 
-                if drone.in_transit:
-                    drone.in_transit = False
-                    self.move_drone(drone, distances)
-                    continue
-
                 if next_destination.zone == ZoneType.RESTRICTED:
+                    t_counter = 0
+                    for d_t in drones:
+                        if d_t.traveling_to_restricted == next_destination:
+                            t_counter += 1
+                    if (
+                        next_destination.max_drones is not None and
+                        t_counter >= next_destination.max_drones
+                    ):
+                        continue
                     drone.in_transit = True
+                    drone.traveling_to_restricted = next_destination
+                    connection_capacities[connection] += 1
                     continue
                 if not drone.goal_reached:
                     self.move_drone(drone, distances)
@@ -146,7 +166,12 @@ class Engine:
             print(self.display_turn())
 
     def display_turn(self) -> str:
-        drones = "".join([f"{drone.id} -> {drone.current_position.name}\n"
-                          for drone in self.game_state.drones])
+        drones = "\n".join(
+            f"{drone.id} -> "
+            f"{f'in transit towards {drone.traveling_to_restricted.name}'
+               if drone.traveling_to_restricted is not None
+               else drone.current_position.name}"
+            for drone in self.game_state.drones
+        )
 
-        return (f"Turn {self.game_state.turn}\n{drones}")
+        return f"\nTurn {self.game_state.turn}\n{drones}"
