@@ -7,6 +7,7 @@ class ZoneType(str, Enum):
     BLOCKED = "blocked"
     RESTRICTED = "restricted"
     PRIORITY = "priority"
+    GOAL = "goal"
 
 
 @dataclass(frozen=True)

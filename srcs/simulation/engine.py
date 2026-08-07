@@ -57,15 +57,34 @@ class Engine:
         best_available_distance = inf
         best_possible_route = neighbours[0]
         best_available_route: str | None = None
+
         for destination in neighbours:
+            priority: bool = False
+            destination_hub = hnl[destination]
+            if destination_hub.zone == ZoneType.GOAL:
+                return destination_hub
+            if destination_hub.zone == ZoneType.PRIORITY:
+                priority = True
             candidate_dist = distances[destination]
+
+            if candidate_dist == best_possible_distance and priority:
+                best_possible_route = destination
+                best_possible_distance = candidate_dist
             if candidate_dist < best_possible_distance:
                 best_possible_route = destination
                 best_possible_distance = candidate_dist
+
             if (
                 candidate_dist < best_available_distance and
-                hnl[destination].zone != ZoneType.RESTRICTED
-                and not self.above_max_drones(hnl[destination])
+                destination_hub.zone != ZoneType.RESTRICTED
+                and not self.above_max_drones(destination_hub)
+            ):
+                best_available_route = destination
+                best_available_distance = candidate_dist
+            if (
+                candidate_dist == best_available_distance and
+                priority
+                and not self.above_max_drones(destination_hub)
             ):
                 best_available_route = destination
                 best_available_distance = candidate_dist

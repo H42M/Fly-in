@@ -4,7 +4,7 @@ from srcs.parsing.entities import Map, Hub, Connection, ZoneType
 from srcs.parsing.input_parser import parse_input
 
 
-def create_hub(hub_data: str, special_case: bool) -> Hub:
+def create_hub(hub_data: str, special_case: bool, goal: bool) -> Hub:
     if not hub_data:
         raise ValueError("Missing hub data.")
     if "[" not in hub_data:
@@ -47,6 +47,8 @@ def create_hub(hub_data: str, special_case: bool) -> Hub:
         kwargs["max_drones"] = max_drones
     if special_case:
         kwargs["max_drones"] = None
+    if goal:
+        zone = ZoneType.GOAL
     return Hub(**kwargs)
 
 
@@ -83,10 +85,10 @@ def create_entities(path: str) -> Map:
     connections_raw = config.connection_list
     connections = []
 
-    start_hub = create_hub(config.start_hub, True)
+    start_hub = create_hub(config.start_hub, True, False)
     for hub in hubs_raw:
-        hubs.append(create_hub(hub, False))
-    end_hub = create_hub(config.end_hub, True)
+        hubs.append(create_hub(hub, False, False))
+    end_hub = create_hub(config.end_hub, True, True)
     for connection in connections_raw:
         connections.append(create_connection(connection))
 
