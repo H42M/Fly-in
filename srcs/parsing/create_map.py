@@ -1,5 +1,7 @@
 from __future__ import annotations
 from typing import Any
+from pathlib import Path
+
 from srcs.parsing.entities import Map, Hub, Connection, ZoneType
 from srcs.parsing.input_parser import parse_input
 
@@ -78,7 +80,7 @@ def create_connection(connection_data: str) -> Connection:
     )
 
 
-def create_entities(path: str) -> Map:
+def create_entities(path: Path) -> Map:
     config = parse_input(path)
     hubs_raw = config.hub_list
     hubs: list[Hub] = []
@@ -125,9 +127,3 @@ def create_entities(path: str) -> Map:
         neighbours=neighbours,
         hub_name_lookup=hub_name_lookup
     )
-
-
-if __name__ == "__main__":
-    test = create_entities("maps/easy/02_simple_fork.txt")
-    for i in test.__slots__:
-        print(i, test.__getattribute__(i))

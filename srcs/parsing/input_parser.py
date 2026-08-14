@@ -1,7 +1,8 @@
 from srcs.parsing.config import Config
+from pathlib import Path
 
 
-def parse_input(path: str) -> Config:
+def parse_input(path: Path) -> Config:
     if not path:
         return Config()
     with open(path, "r") as file:
@@ -46,9 +47,3 @@ def parse_input(path: str) -> Config:
         end_hub=end_hub,
         connection_list=tuple(connection_list)
     )
-
-
-if __name__ == "__main__":
-    test = parse_input("maps/easy/02_simple_fork.txt")
-    for i in test.__slots__:
-        print(i, test.__getattribute__(i))

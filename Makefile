@@ -14,6 +14,10 @@ install: $(VENV_PYTHON)
 	@$(VENV_PYTHON) -m pip install -r $(REQUIREMENTS)
 
 run:
+	@if [ ! -x "$(VENV_PYTHON)" ]; then \
+		echo "Error: virtual environment not found. Run 'make install' first."; \
+		exit 1; \
+	fi
 	@$(VENV_PYTHON) $(MAIN)
 
 debug: install
