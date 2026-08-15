@@ -31,16 +31,16 @@ fclean: clean
 	@rm -rf $(VENV)
 
 lint:
-	@$(VENV_PYTHON) flake8 .
-	@$(VENV_PYTHON) mypy . --warn-return-any \
+	@$(VENV_PYTHON) -m flake8 . --exclude=.venv
+	@$(VENV_PYTHON) -m mypy . --exclude '^\.venv/' --warn-return-any \
 	--warn-unused-ignores \
 	--ignore-missing-imports \
 	--disallow-untyped-defs \
 	--check-untyped-defs
 
 lint-strict:
-	@$(VENV_PYTHON) flake8 .
-	@$(VENV_PYTHON) mypy . --strict \
+	@$(VENV_PYTHON) -m flake8 . --exclude=.venv
+	@$(VENV_PYTHON) -m mypy . --exclude '^\.venv/' --strict \
 	--warn-return-any \
 	--warn-unused-ignores \
 	--ignore-missing-imports \
