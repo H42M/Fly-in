@@ -1,11 +1,10 @@
 import pygame
-import os
 from enum import Enum
 from pathlib import Path
 
+from srcs.visualization.constants import WINDOW_WIDTH
 
-WINDOW_WIDTH = 1920
-WINDOW_HEIGHT = 1080
+
 MAPS_DIR = Path("maps")
 
 
@@ -18,14 +17,7 @@ class Category(str, Enum):
     CUSTOM = "custom"
 
 
-def run_menu() -> Path | None:
-    os.environ["SDL_VIDEO_WINDOW_POS"] = "320,180"
-
-    pygame.init()
-
-    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption("Fly-in")
-
+def run_menu(screen: pygame.Surface) -> Path | None:
     title_font = pygame.font.Font(None, 110)
     menu_font = pygame.font.Font(None, 55)
 
@@ -83,7 +75,6 @@ def run_menu() -> Path | None:
                     else:
                         for map_file, map_rect in map_buttons:
                             if map_rect.collidepoint(event.pos):
-                                pygame.quit()
                                 return map_file
             if (
                 event.type == pygame.KEYDOWN
@@ -149,5 +140,4 @@ def run_menu() -> Path | None:
 
         pygame.display.flip()
 
-    pygame.quit()
     return None
