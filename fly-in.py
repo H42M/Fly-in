@@ -3,7 +3,7 @@ import os
 
 from srcs.parsing.create_map import create_entities
 from srcs.simulation.game_state import GameState
-from srcs.simulation.engine import Engine
+# from srcs.simulation.engine import Engine
 from srcs.visualization.menu import run_menu
 from srcs.visualization.visualizer import run_visualizer
 from srcs.visualization.constants import (
