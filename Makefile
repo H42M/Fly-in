@@ -30,6 +30,8 @@ clean:
 fclean: clean
 	@rm -rf $(VENV)
 
+re: fclean install
+
 lint:
 	@$(VENV_PYTHON) -m flake8 . --exclude=.venv
 	@$(VENV_PYTHON) -m mypy . --exclude '^\.venv/' --warn-return-any \

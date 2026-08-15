@@ -1,4 +1,5 @@
 import pygame
+import os
 from enum import Enum
 from pathlib import Path
 
@@ -18,6 +19,8 @@ class Category(str, Enum):
 
 
 def run_menu() -> Path | None:
+    os.environ["SDL_VIDEO_WINDOW_POS"] = "320,180"
+
     pygame.init()
 
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
