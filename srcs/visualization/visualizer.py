@@ -1,5 +1,6 @@
 import pygame
 
+from srcs.simulation.engine import Engine
 from srcs.simulation.game_state import GameState
 from srcs.visualization.constants import (
     WINDOW_WIDTH,
@@ -59,8 +60,9 @@ def get_hub_positions(
 
 def run_visualizer(
     screen: pygame.Surface,
-    game_state: GameState,
+    engine: Engine
 ) -> bool:
+    game_state = engine.game_state
     positions = get_hub_positions(game_state)
     hubs = [
         game_state.game_map.start_hub,
@@ -68,6 +70,10 @@ def run_visualizer(
         game_state.game_map.end_hub,
     ]
     hub_title_font = pygame.font.Font(None, 18)
+
+    drone_sheet = pygame.image.load("assets/Drones/1/Idle.png").convert_alpha()
+    drone_image = drone_sheet.subsurface(pygame.Rect(0, 0, 48, 48))
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -76,9 +82,12 @@ def run_visualizer(
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return True
+                if event.key == pygame.K_SPACE and engine.drones_traveling():
+                    engine.run_turn()
 
         screen.fill("black")
 
+        # Connection (lines) display
         for connection in game_state.game_map.connections:
             start_pos = positions[connection.name1]
             end_pos = positions[connection.name2]
@@ -91,6 +100,7 @@ def run_visualizer(
                 2,
             )
 
+        # Hub display
         for hub in hubs:
             position = positions[hub.name]
             pygame.draw.circle(screen, "black", position, 25)
@@ -105,5 +115,14 @@ def run_visualizer(
             hub_title = hub_title_font.render(hub.name, True, "white")
             x, y = position
             screen.blit(hub_title, hub_title.get_rect(center=(x, y + 35)))
+
+        # Drone display
+        for drone in game_state.drones:
+            position = positions[drone.current_position.name]
+
+            screen.blit(
+                drone_image,
+                drone_image.get_rect(center=position)
+            )
 
         pygame.display.flip()

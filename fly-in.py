@@ -3,7 +3,7 @@ import os
 
 from srcs.parsing.create_map import create_entities
 from srcs.simulation.game_state import GameState
-# from srcs.simulation.engine import Engine
+from srcs.simulation.engine import Engine
 from srcs.visualization.menu import run_menu
 from srcs.visualization.visualizer import run_visualizer
 from srcs.visualization.constants import (
@@ -29,8 +29,8 @@ def run() -> None:
 
         game_map = create_entities(path)
         game_state = GameState(0, game_map)
-
-        back_to_menu = run_visualizer(screen, game_state)
+        engine = Engine(game_state)
+        back_to_menu = run_visualizer(screen, engine)
 
         if not back_to_menu:
             break
