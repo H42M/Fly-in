@@ -74,6 +74,11 @@ def run_visualizer(
     drone_sheet = pygame.image.load("assets/Drones/1/Idle.png").convert_alpha()
     drone_image = drone_sheet.subsurface(pygame.Rect(0, 0, 48, 48))
 
+    animation_start = 0
+    animation_duration = 400
+    animating = False
+    old_positions: dict[str, tuple[int, int]] = {}
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -82,8 +87,17 @@ def run_visualizer(
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return True
-                if event.key == pygame.K_SPACE and engine.drones_traveling():
+                if (
+                    event.key == pygame.K_SPACE
+                    and engine.drones_traveling()
+                    and not animating
+                ):
+                    old_positions = {
+                        drone.id: positions[drone.current_position.name]
+                        for drone in game_state.drones}
                     engine.run_turn()
+                    animation_start = pygame.time.get_ticks()
+                    animating = True
 
         screen.fill("black")
 
@@ -119,10 +133,32 @@ def run_visualizer(
         # Drone display
         for drone in game_state.drones:
             position = positions[drone.current_position.name]
+            if not old_positions:
+                screen.blit(
+                    drone_image,
+                    drone_image.get_rect(center=position)
+                )
+                continue
+            elapsed = pygame.time.get_ticks() - animation_start
+            start_x, start_y = old_positions[drone.id]
+            end_x, end_y = position
+            progress = min(elapsed / animation_duration, 1.0)
 
-            screen.blit(
-                drone_image,
-                drone_image.get_rect(center=position)
-            )
+            current_x = start_x + (end_x - start_x) * progress
+            current_y = start_y + (end_y - start_y) * progress
+            current_pos = (current_x, current_y)
+
+            if animating:
+                screen.blit(
+                    drone_image,
+                    drone_image.get_rect(center=(current_pos))
+                )
+            else:
+                screen.blit(
+                    drone_image,
+                    drone_image.get_rect(center=position)
+                )
+                if progress >= 1.0:
+                    animating = False
 
         pygame.display.flip()
