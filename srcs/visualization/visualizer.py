@@ -65,10 +65,41 @@ def midpoint(start: tuple[int, int], end: tuple[int, int]
     return ((start_x + end_x) // 2, (start_y + end_y) // 2)
 
 
+def draw_hud(screen: pygame.Surface, game_state: GameState,
+             auto_run: bool, delay: int) -> None:
+    turn_font = pygame.font.Font(None, 55)
+    hud_font = pygame.font.Font(None, 32)
+    hud_y = WINDOW_HEIGHT - HUD_HEIGHT
+    hud_rect = pygame.Rect(
+        0,
+        hud_y,
+        WINDOW_WIDTH,
+        HUD_HEIGHT,
+    )
+    mode = "AUTO" if auto_run else "MANUAL"
+
+    turn = game_state.turn
+    delivered = sum(drone.goal_reached for drone in game_state.drones)
+    total = len(game_state.drones)
+
+    turn_text = turn_font.render(f"Turn: {turn}", True, "white")
+    delivered_text = hud_font.render(f"Delivered: {delivered}/{total}", True,
+                                     "white")
+    mode_text = hud_font.render(f"Mode: {mode}", True, "white")
+    delay_text = hud_font.render(f"Delay: {delay / 1000}s", True, "white")
+
+    pygame.draw.rect(screen, "white", hud_rect, 3)
+    screen.blit(turn_text, (40, hud_y + 25))
+    screen.blit(delivered_text, (260, hud_y + 38))
+    screen.blit(mode_text, (650, hud_y + 38))
+    screen.blit(delay_text, (900, hud_y + 38))
+
+
 def run_visualizer(
     screen: pygame.Surface,
     engine: Engine
 ) -> bool:
+
     game_state = engine.game_state
     positions = get_hub_positions(game_state)
     hubs = [
@@ -86,8 +117,12 @@ def run_visualizer(
     animating = False
     old_positions: dict[str, tuple[int, int]] = {}
     progress: float = 0
+    auto_run = False
+    delay = 500
+    last_turn_time = pygame.time.get_ticks()
 
     while True:
+        current_time = pygame.time.get_ticks()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
@@ -95,10 +130,15 @@ def run_visualizer(
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return True
+                if event.key == pygame.K_a:
+                    auto_run = not auto_run
+                    if auto_run:
+                        last_turn_time = pygame.time.get_ticks()
                 if (
                     event.key == pygame.K_SPACE
                     and engine.drones_traveling()
                     and not animating
+                    and not auto_run
                 ):
                     for drone in game_state.drones:
                         if drone.traveling_to_restricted is not None:
@@ -111,8 +151,24 @@ def run_visualizer(
 
                     engine.run_turn()
                     animation_start = pygame.time.get_ticks()
+                    last_turn_time = animation_start
                     animating = True
+        if (
+            auto_run and not animating and engine.drones_traveling()
+            and (current_time - last_turn_time >= delay)
+        ):
+            for drone in game_state.drones:
+                if drone.traveling_to_restricted is not None:
+                    old_positions[drone.id] = midpoint(
+                        positions[drone.current_position.name],
+                        positions[drone.traveling_to_restricted.name])
+                else:
+                    old_positions[drone.id] = positions[
+                        drone.current_position.name]
 
+            engine.run_turn()
+            animation_start = pygame.time.get_ticks()
+            animating = True
         screen.fill("black")
 
         # Connection (lines) display
@@ -179,5 +235,7 @@ def run_visualizer(
                 )
         if progress >= 1.0:
             animating = False
+
+        draw_hud(screen, game_state, auto_run, delay)
 
         pygame.display.flip()
