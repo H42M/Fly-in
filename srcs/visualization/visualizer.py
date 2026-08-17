@@ -58,6 +58,13 @@ def get_hub_positions(
     return positions
 
 
+def midpoint(start: tuple[int, int], end: tuple[int, int]
+             ) -> tuple[int, int]:
+    start_x, start_y = start
+    end_x, end_y = end
+    return ((start_x + end_x) // 2, (start_y + end_y) // 2)
+
+
 def run_visualizer(
     screen: pygame.Surface,
     engine: Engine
@@ -78,6 +85,7 @@ def run_visualizer(
     animation_duration = 400
     animating = False
     old_positions: dict[str, tuple[int, int]] = {}
+    progress: float = 0
 
     while True:
         for event in pygame.event.get():
@@ -92,9 +100,15 @@ def run_visualizer(
                     and engine.drones_traveling()
                     and not animating
                 ):
-                    old_positions = {
-                        drone.id: positions[drone.current_position.name]
-                        for drone in game_state.drones}
+                    for drone in game_state.drones:
+                        if drone.traveling_to_restricted is not None:
+                            old_positions[drone.id] = midpoint(
+                                positions[drone.current_position.name],
+                                positions[drone.traveling_to_restricted.name])
+                        else:
+                            old_positions[drone.id] = positions[
+                                drone.current_position.name]
+
                     engine.run_turn()
                     animation_start = pygame.time.get_ticks()
                     animating = True
@@ -132,7 +146,12 @@ def run_visualizer(
 
         # Drone display
         for drone in game_state.drones:
-            position = positions[drone.current_position.name]
+            if drone.traveling_to_restricted is not None:
+                position = midpoint(
+                    positions[drone.current_position.name],
+                    positions[drone.traveling_to_restricted.name])
+            else:
+                position = positions[drone.current_position.name]
             if not old_positions:
                 screen.blit(
                     drone_image,
@@ -158,7 +177,7 @@ def run_visualizer(
                     drone_image,
                     drone_image.get_rect(center=position)
                 )
-                if progress >= 1.0:
-                    animating = False
+        if progress >= 1.0:
+            animating = False
 
         pygame.display.flip()
