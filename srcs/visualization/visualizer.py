@@ -68,7 +68,7 @@ def midpoint(start: tuple[int, int], end: tuple[int, int]
 def draw_hud(screen: pygame.Surface, game_state: GameState,
              auto_run: bool, delay: int) -> None:
     turn_font = pygame.font.Font(None, 55)
-    hud_font = pygame.font.Font(None, 32)
+    hud_font = pygame.font.SysFont("dejavusans", 32, bold=True)
     hud_y = WINDOW_HEIGHT - HUD_HEIGHT
     hud_rect = pygame.Rect(
         0,
@@ -76,31 +76,43 @@ def draw_hud(screen: pygame.Surface, game_state: GameState,
         WINDOW_WIDTH,
         HUD_HEIGHT,
     )
-    mode = "AUTO" if auto_run else "MANUAL"
 
     turn = game_state.turn
     delivered = sum(drone.goal_reached for drone in game_state.drones)
     total = len(game_state.drones)
+
+    if delivered == total:
+        mode = "COMPLETE"
+    else:
+        mode = "AUTO" if auto_run else "MANUAL"
 
     turn_text = turn_font.render(f"Turn: {turn}", True, "white")
     delivered_text = hud_font.render(f"Delivered: {delivered}/{total}", True,
                                      "white")
     mode_text = hud_font.render(f"Mode: {mode}", True, "white")
     delay_text = hud_font.render(f"Delay: {delay / 1000}s", True, "white")
+    controls_text = hud_font.render(
+        "SPACE : Next Turn      A : Auto/Pause      ←/→ : Delay      "
+        "R : Restart      ESC: Menu",
+        True,
+        "white",
+    )
 
     pygame.draw.rect(screen, "white", hud_rect, 3)
     screen.blit(turn_text, (40, hud_y + 25))
     screen.blit(delivered_text, (260, hud_y + 38))
     screen.blit(mode_text, (650, hud_y + 38))
-    screen.blit(delay_text, (900, hud_y + 38))
+    screen.blit(delay_text, (1000, hud_y + 38))
+    screen.blit(controls_text, (40, hud_y + 105))
 
 
 def run_visualizer(
     screen: pygame.Surface,
     engine: Engine
 ) -> bool:
-
     game_state = engine.game_state
+    game_map = game_state.game_map
+
     positions = get_hub_positions(game_state)
     hubs = [
         game_state.game_map.start_hub,
@@ -112,17 +124,23 @@ def run_visualizer(
     drone_sheet = pygame.image.load("assets/Drones/1/Idle.png").convert_alpha()
     drone_image = drone_sheet.subsurface(pygame.Rect(0, 0, 48, 48))
 
-    animation_start = 0
-    animation_duration = 400
-    animating = False
     old_positions: dict[str, tuple[int, int]] = {}
     progress: float = 0
     auto_run = False
-    delay = 500
+    delay_index = 2
+    delay_options = [2000, 1000, 500, 250, 100]
+
     last_turn_time = pygame.time.get_ticks()
 
+    animation_start = 0
+    animating = False
+
     while True:
+        delay = delay_options[delay_index]
+        animation_duration = min(400, delay)
         current_time = pygame.time.get_ticks()
+        if not engine.drones_traveling():
+            auto_run = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
@@ -130,10 +148,27 @@ def run_visualizer(
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return True
+                if event.key == pygame.K_r:
+                    game_state = GameState(0, game_map)
+                    engine = Engine(game_state)
+                    old_positions.clear()
+                    progress = 0
+                    animating = False
+                    auto_run = False
+                    animation_start = 0
+                    last_turn_time = pygame.time.get_ticks()
                 if event.key == pygame.K_a:
                     auto_run = not auto_run
                     if auto_run:
                         last_turn_time = pygame.time.get_ticks()
+                if event.key == pygame.K_RIGHT:
+                    delay_index -= 1
+                    if delay_index < 0:
+                        delay_index = len(delay_options) - 1
+                if event.key == pygame.K_LEFT:
+                    delay_index += 1
+                    if delay_index > len(delay_options) - 1:
+                        delay_index = 0
                 if (
                     event.key == pygame.K_SPACE
                     and engine.drones_traveling()
@@ -168,6 +203,7 @@ def run_visualizer(
 
             engine.run_turn()
             animation_start = pygame.time.get_ticks()
+            last_turn_time = animation_start
             animating = True
         screen.fill("black")
 
