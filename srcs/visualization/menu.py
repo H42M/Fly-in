@@ -28,11 +28,15 @@ def run_menu(screen: pygame.Surface) -> Path | None:
     medium_rect = pygame.Rect(1100, 390, button_width, button_height)
     hard_rect = pygame.Rect(420, 600, button_width, button_height)
     challenger_rect = pygame.Rect(1100, 600, button_width, button_height)
+    custom_rect = pygame.Rect(760, 810, button_width, button_height)
     back_rect = pygame.Rect(100, 100, 200, 80)
 
     running = True
     selected_category: Category = Category.BASE_MENU
 
+    custom_path = ""
+    error_message = ""
+    error_start_time = 0
     while running:
         map_buttons: list[tuple[Path, pygame.Rect]] = []
 
@@ -59,15 +63,14 @@ def run_menu(screen: pygame.Surface) -> Path | None:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if easy_rect.collidepoint(event.pos):
                         selected_category = Category.EASY
-
                     elif medium_rect.collidepoint(event.pos):
                         selected_category = Category.MEDIUM
-
                     elif hard_rect.collidepoint(event.pos):
                         selected_category = Category.HARD
-
                     elif challenger_rect.collidepoint(event.pos):
                         selected_category = Category.CHALLENGER
+                    elif custom_rect.collidepoint(event.pos):
+                        selected_category = Category.CUSTOM
             else:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if back_rect.collidepoint(event.pos):
@@ -76,6 +79,18 @@ def run_menu(screen: pygame.Surface) -> Path | None:
                         for map_file, map_rect in map_buttons:
                             if map_rect.collidepoint(event.pos):
                                 return map_file
+            if selected_category == Category.CUSTOM:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        custom_file = Path(custom_path)
+                        if custom_file.is_file():
+                            return custom_file
+                        error_message = "FILE NOT FOUND"
+                        error_start_time = pygame.time.get_ticks()
+                    elif event.key == pygame.K_BACKSPACE:
+                        custom_path = custom_path[:-1]
+                    else:
+                        custom_path += event.unicode
             if (
                 event.type == pygame.KEYDOWN
                 and event.key == pygame.K_ESCAPE
@@ -111,6 +126,48 @@ def run_menu(screen: pygame.Surface) -> Path | None:
             screen.blit(
                 challenger_text, challenger_text.get_rect(
                     center=challenger_rect.center))
+
+            pygame.draw.rect(screen, "white", custom_rect, 3)
+            custom_text = menu_font.render("CUSTOM", True, "white")
+            screen.blit(custom_text,
+                        custom_text.get_rect(center=custom_rect.center))
+
+        elif selected_category == Category.CUSTOM:
+            custom_title = title_font.render(
+                "CUSTOM MAP PATH:", True, "white"
+            )
+            screen.blit(
+                custom_title,
+                custom_title.get_rect(center=(WINDOW_WIDTH // 2, 140))
+            )
+
+            pygame.draw.rect(screen, "white", back_rect, 3)
+            back_text = menu_font.render("BACK", True, "white")
+            screen.blit(
+                back_text,
+                back_text.get_rect(center=back_rect.center)
+            )
+
+            custom_file_rect = pygame.Rect(
+                                WINDOW_WIDTH // 2 - 350,
+                                500,
+                                700,
+                                100,
+                            )
+            pygame.draw.rect(screen, "white", custom_file_rect, 3)
+            custom_file_text = menu_font.render(custom_path, True, "white")
+            screen.blit(custom_file_text,
+                        custom_file_text.get_rect(
+                            center=custom_file_rect.center))
+            if error_message:
+                if pygame.time.get_ticks() - error_start_time < 1000:
+                    error_text = menu_font.render(error_message, True, "red")
+                    screen.blit(
+                        error_text,
+                        error_text.get_rect(center=(WINDOW_WIDTH // 2, 650)),
+                    )
+                else:
+                    error_message = ""
 
         else:
             category_text = title_font.render(
