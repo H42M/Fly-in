@@ -21,13 +21,19 @@ def run() -> None:
 
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption("Fly-in")
+
+    error_message = ""
     while True:
-        path = run_menu(screen)
+        path = run_menu(screen, error_message)
+        error_message = ""
 
         if path is None:
             break
-
-        game_map = create_entities(path)
+        try:
+            game_map = create_entities(path)
+        except ValueError as error:
+            error_message = str(error)
+            continue
         game_state = GameState(0, game_map)
         engine = Engine(game_state)
         back_to_menu = run_visualizer(screen, engine)

@@ -17,7 +17,7 @@ class Category(str, Enum):
     CUSTOM = "custom"
 
 
-def run_menu(screen: pygame.Surface) -> Path | None:
+def run_menu(screen: pygame.Surface, parser_error: str) -> Path | None:
     title_font = pygame.font.Font(None, 110)
     menu_font = pygame.font.Font(None, 55)
 
@@ -35,8 +35,9 @@ def run_menu(screen: pygame.Surface) -> Path | None:
     selected_category: Category = Category.BASE_MENU
 
     custom_path = ""
-    error_message = ""
-    error_start_time = 0
+    custom_error = ""
+    custom_error_time = 0
+    parser_error_time = pygame.time.get_ticks()
     while running:
         map_buttons: list[tuple[Path, pygame.Rect]] = []
 
@@ -85,8 +86,8 @@ def run_menu(screen: pygame.Surface) -> Path | None:
                         custom_file = Path(custom_path)
                         if custom_file.is_file():
                             return custom_file
-                        error_message = "FILE NOT FOUND"
-                        error_start_time = pygame.time.get_ticks()
+                        custom_error = "FILE NOT FOUND"
+                        custom_error_time = pygame.time.get_ticks()
                     elif event.key == pygame.K_BACKSPACE:
                         custom_path = custom_path[:-1]
                     else:
@@ -132,6 +133,16 @@ def run_menu(screen: pygame.Surface) -> Path | None:
             screen.blit(custom_text,
                         custom_text.get_rect(center=custom_rect.center))
 
+            if parser_error:
+                if pygame.time.get_ticks() - parser_error_time < 1000:
+                    error_text = menu_font.render(parser_error, True, "red")
+                    screen.blit(
+                        error_text,
+                        error_text.get_rect(center=(WINDOW_WIDTH // 2, 1000)),
+                    )
+                else:
+                    parser_error = ""
+
         elif selected_category == Category.CUSTOM:
             custom_title = title_font.render(
                 "CUSTOM MAP PATH:", True, "white"
@@ -159,15 +170,15 @@ def run_menu(screen: pygame.Surface) -> Path | None:
             screen.blit(custom_file_text,
                         custom_file_text.get_rect(
                             center=custom_file_rect.center))
-            if error_message:
-                if pygame.time.get_ticks() - error_start_time < 1000:
-                    error_text = menu_font.render(error_message, True, "red")
+            if custom_error:
+                if pygame.time.get_ticks() - custom_error_time < 1000:
+                    error_text = menu_font.render(custom_error, True, "red")
                     screen.blit(
                         error_text,
                         error_text.get_rect(center=(WINDOW_WIDTH // 2, 650)),
                     )
                 else:
-                    error_message = ""
+                    custom_error = ""
 
         else:
             category_text = title_font.render(

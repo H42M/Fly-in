@@ -178,6 +178,7 @@ class Engine:
                 ):
                     continue
                 drone.in_transit = True
+                drone.has_moved_this_turn = True
                 drone.traveling_to_restricted = next_destination
                 connection_capacities[connection] += 1
                 continue
@@ -193,6 +194,8 @@ class Engine:
         game_map = game_state.game_map
         drones = ""
         for drone in game_state.drones:
+            if not drone.has_moved_this_turn:
+                continue
             if drone.traveling_to_restricted is not None:
                 connection = game_map.get_connection(
                     drone.current_position.name,
