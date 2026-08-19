@@ -189,14 +189,17 @@ class Engine:
         print(self.display_turn())
 
     def display_turn(self) -> str:
-        cons = self.game_state.game_map.connections
-        
-        drones = "".join(
-            f"{drone.id}-"
-            f"{f'{drone.traveling_to_restricted.name}'
-               if drone.traveling_to_restricted is not None
-               else drone.current_position.name} "
-            for drone in self.game_state.drones
-        )
-
-        return f"{drones}"
+        game_state = self.game_state
+        game_map = game_state.game_map
+        drones = ""
+        for drone in game_state.drones:
+            if drone.traveling_to_restricted is not None:
+                connection = game_map.get_connection(
+                    drone.current_position.name,
+                    drone.traveling_to_restricted.name
+                )
+                position = connection.name
+            else:
+                position = drone.current_position.name
+            drones += f"{drone.id}-{position} "
+        return drones
